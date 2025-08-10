@@ -1,9 +1,0 @@
-
-services:
-  - type: web
-    name: chess-video-analyzer
-    env: docker
-    plan: free
-    dockerfilePath: ./Dockerfile
-    instanceSizeSlug: free
-    autoDeploy: true
