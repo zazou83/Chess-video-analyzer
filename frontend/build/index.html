@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Analyseur vidéo d’échecs</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 30px; }
+      #progress { width: 100%; background: #eee; border: 1px solid #ccc; margin-top: 20px; height: 25px; }
+      #bar { width: 0; height: 100%; background: #4caf50; }
+      #result { margin-top: 20px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Analyseur vidéo d’échecs</h1>
+    <input type="file" id="videoInput" accept="video/*" />
+    <button id="uploadBtn">Analyser la vidéo</button>
+
+    <div id="progress" style="display:none;">
+        <div id="bar"></div>
+    </div>
+
+    <div id="result"></div>
+
+<script>
+    const videoInput = document.getElementById('videoInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const progressBar = document.getElementById('progress');
+    const bar = document.getElementById('bar');
+    const resultDiv = document.getElementById('result');
+
+    uploadBtn.onclick = () => {
+        if (!videoInput.files.length) {
+            alert('Veuillez sélectionner une vidéo.');
+            return;
+        }
+        const file = videoInput.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        progressBar.style.display = 'block';
+        bar.style.width = '0%';
+        resultDiv.textContent = '';
+
+        fetch('/analyze/', {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (!response.ok) throw new Error('Erreur lors de l\'analyse');
+            const disposition = response.headers.get('Content-Disposition');
+            let filename = 'game.pgn';
+            if (disposition && disposition.indexOf('filename=') !== -1) {
+                filename = disposition.split('filename=')[1].replace(/"/g, '');
+            }
+            return response.blob().then(blob => ({ blob, filename }));
+        }).then(({ blob, filename }) => {
+            bar.style.width = '100%';
+            // Affiche le contenu PGN
+            const reader = new FileReader();
+            reader.onload = () => {
+                resultDiv.textContent = reader.result;
+                // Propose le téléchargement du fichier PGN
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.textContent = 'Télécharger le fichier PGN';
+                a.style.display = 'block';
+                a.style.marginTop = '10px';
+                resultDiv.appendChild(a);
+            };
+            reader.readAsText(blob);
+        }).catch(err => {
+            alert(err.message);
+            progressBar.style.display = 'none';
+        });
+    };
+</script>
+</body>
+</html>
