@@ -1,8 +1,0 @@
-
-fastapi
-uvicorn[standard]
-sse-starlette
-python-multipart
-opencv-python-headless
-numpy
-python-chess
